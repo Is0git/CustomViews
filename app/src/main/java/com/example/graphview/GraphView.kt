@@ -1,13 +1,12 @@
 package com.example.graphview
 
-import android.content.ContentResolver
 import android.content.Context
 import android.graphics.*
 import android.provider.MediaStore
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.net.toUri
-import java.io.File
+
 
 class GraphView : View, GraphActions {
     lateinit var rect: Rect
@@ -17,15 +16,19 @@ class GraphView : View, GraphActions {
     lateinit var circle: RectF
     lateinit var bg: Bitmap
     lateinit var bgPaint: Paint
+    var desiredWidth = 100
+    var desiredHeight = 100
     var max: Float = 0f
     var min: Float = 0f
-    val linesList = mutableListOf<Lines>(Lines(800), Lines(600), Lines(800), Lines(200), Lines(100), Lines(0)
+    val linesList = mutableListOf<Lines>(
+        Lines(800), Lines(600), Lines(800), Lines(200), Lines(100), Lines(0)
         , Lines(600)
         , Lines(200)
         , Lines(500)
         , Lines(100)
         , Lines(100)
-        ,Lines(200))
+        , Lines(200)
+    )
 
     var lineMaxHeight = 350f
     var spaceSize = 100f
@@ -67,7 +70,10 @@ class GraphView : View, GraphActions {
 
         circle = RectF()
 
-        bg = MediaStore.Images.Media.getBitmap(context.contentResolver, "android.resource://com.example.graphview/drawable/bg".toUri())
+        bg = MediaStore.Images.Media.getBitmap(
+            context.contentResolver,
+            "android.resource://com.example.graphview/drawable/bg".toUri()
+        )
 
         bgPaint = Paint().apply {
 
@@ -75,51 +81,58 @@ class GraphView : View, GraphActions {
     }
 
 
-    constructor(
-        context: Context?,
+        constructor(
+            context: Context?,
         attrs: AttributeSet?,
         defStyleAttr: Int,
         defStyleRes: Int
-    ) : super(context, attrs, defStyleAttr, defStyleRes)
+        ) : super(context, attrs, defStyleAttr, defStyleRes)
 
 
-    override fun onDraw(canvas: Canvas?) {
-        super.onDraw(canvas)
+        override fun onDraw(canvas: Canvas?) {
+            super.onDraw(canvas)
+            canvas?.drawRect(rect, paint)
+            max = getMax(linesList)?.value?.toFloat()!!
+            rect.set(
+                0,
+                0,
+                width * resources.displayMetrics.widthPixels,
+                max.toInt()
+            )
 
-        canvas?.drawRect(rect, paint)
-        max = getMax(linesList)?.value?.toFloat()!!
-        rect.set(
-            0,
-            0,
-            width * resources.displayMetrics.widthPixels,
-            max.toInt()
-        )
+
 //        canvas?.drawRect(rect, paint)
-        var height = max/2
-        var width = spaceSize
-        canvas?.drawLine(0f, max, resources.displayMetrics.widthPixels.toFloat(), max, baseLine )
-        canvas?.drawLine(0f, 0f, resources.displayMetrics.widthPixels.toFloat(), 0f, baseLine )
-        canvas?.drawBitmap(bg, 0f, 0f, bgPaint.apply {
-            isAntiAlias = true
+            var height = max / 2
+            var width = spaceSize
+            canvas?.drawLine(0f, max, resources.displayMetrics.widthPixels.toFloat(), max, baseLine)
+            canvas?.drawLine(0f, 0f, resources.displayMetrics.widthPixels.toFloat(), 0f, baseLine)
+            canvas?.drawBitmap(bg, 0f, 0f, bgPaint.apply {
+                isAntiAlias = true
 
-        })
+            })
             linesList.forEach {
 
-                canvas?.drawLine(width, height, width + spaceSize, max - it.value.toFloat(), linePaint)
+                canvas?.drawLine(
+                    width,
+                    height,
+                    width + spaceSize,
+                    max - it.value.toFloat(),
+                    linePaint
+                )
                 canvas?.drawCircle(width, height, 10f, paint)
                 height = max - it.value.toFloat()
                 width += 100f
+            }
+
         }
 
+        override fun addLines(lines: Lines) {
+            linesList.add(lines)
+        }
+
+        override fun getMax(linesList: List<Lines>) = linesList.maxBy { it.value }
+
+
+        override fun getMin(linesList: List<Lines>) = linesList.minBy { it.value }
+
     }
-
-    override fun addLines(lines: Lines) {
-        linesList.add(lines)
-    }
-
-    override fun getMax(linesList: List<Lines>) = linesList.maxBy { it.value }
-
-
-    override fun getMin(linesList: List<Lines>) = linesList.minBy { it.value }
-
-}
